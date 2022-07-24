@@ -1,0 +1,8 @@
+name: SlamSellItems
+version: '${project.version}'
+main: me.matzhilven.slamsellitems.SlamSellItems
+api-version: 1.17
+depend: [ ShopGUIPlus, Vault, ProtocolLib, PlotSquared ]
+authors: [ MatzHilven ]
+commands:
+  sellitems:

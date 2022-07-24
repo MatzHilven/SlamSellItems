@@ -1,0 +1,32 @@
+sell-chest-item:
+  name: "&aSell Chest"
+  lore:
+    - "&7lore"
+  glow: true
+
+sell-wand-item:
+  material: BLAZE_ROD
+  name: "&aSell Wand &7&o(%uses% uses)"
+  lore:
+    - " "
+    - "&7Uses left: %uses-left%"
+  glow: true
+
+message-loop: 1 # in minutes
+
+messages:
+  invalid-perms: "&cInvalid permissions!"
+  invalid-player: "&cCannot find specified player!"
+  invalid-number: "&cInvalid number!"
+  invalid-item: "&cInvalid item! Use `chest` or `wand`"
+  usage: "&cUsage: /sellitems give <player> <item> <amount> [uses] | /sellitems reload"
+  given: "&7You have successfully given &a%player% %amount% %item%!"
+  received: "&7You have received &a%amount% %item%!"
+  placed: "&aSuccessfully placed a &7Sell Chest&a!"
+  removed: "&aSuccessfully remove a &7Sell Chest&a!"
+  reloaded: "&aSuccessfully reloaded the configuration files!"
+  sellwand-broke: "&cYour sell wand broke!"
+  sold-contents: "&aSuccessfully sold the contents of the chest for %price%$"
+  sold-message: "&fYour sell chests have made &b$%amount% &fin the last 5 minutes!"
+  sold-message-item: " &f%material% - %amount%x &7&o(%price%)"
+  sold-message-footer: "&fYour sell chests have made &b$%amount% &fin the last 5 minutes!"
