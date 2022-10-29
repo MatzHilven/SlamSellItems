@@ -15,14 +15,12 @@ import java.util.UUID;
 
 public class SellChest {
 
-    private final UUID uuid;
     private final UUID owner;
     private Block block;
     private Inventory defaultInventory;
     private boolean loaded;
 
-    public SellChest(UUID uuid, UUID owner, Block block, boolean loaded) {
-        this.uuid = uuid;
+    public SellChest(UUID owner, Block block, boolean loaded) {
         this.owner = owner;
         this.block = block;
         this.loaded = loaded;
@@ -35,10 +33,6 @@ public class SellChest {
         return owner;
     }
 
-    public UUID getUuid() {
-        return uuid;
-    }
-
     public Location getLocation() {
         return block.getLocation();
     }
@@ -48,14 +42,18 @@ public class SellChest {
     }
 
     public void load(Player player, SlamSellItems main, Location location) {
+
+        if (location == null || location.getWorld() == null) {
+            main.getChestManager().removeChest(location);
+            return;
+        }
+
         Block block = location.getWorld().getBlockAt(location);
 
         if (!(block.getState() instanceof Chest)) {
             main.getChestManager().removeChest(location, null, false);
             return;
         }
-
-        block.setMetadata("sell_chest", new FixedMetadataValue(main, uuid));
 
         Chest chest = (Chest) block.getState();
         defaultInventory = chest.getBlockInventory();

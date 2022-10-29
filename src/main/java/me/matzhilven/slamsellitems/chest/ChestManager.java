@@ -1,6 +1,7 @@
 package me.matzhilven.slamsellitems.chest;
 
 import me.matzhilven.slamsellitems.SlamSellItems;
+import me.matzhilven.slamsellitems.data.PlayerDataFile;
 import me.matzhilven.slamsellitems.utils.ShopGUIUtils;
 import me.matzhilven.slamsellitems.utils.StringUtils;
 import org.bukkit.Bukkit;
@@ -11,7 +12,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.metadata.FixedMetadataValue;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -47,7 +47,7 @@ public class ChestManager {
                         .sum();
 
                 StringUtils.sendMessage(player, main.getConfig().getString("messages.sold-message")
-                    .replace("%amount%", StringUtils.format(totalPrice))
+                        .replace("%amount%", StringUtils.format(totalPrice))
                 );
 
                 StringUtils.sendMessage(player, " ");
@@ -107,11 +107,8 @@ public class ChestManager {
     }
 
     public void addChest(Block block, UUID owner) {
-        SellChest sellChest = new SellChest(UUID.randomUUID(), owner, block, true);
-        block.setMetadata("sell_chest", new FixedMetadataValue(main, sellChest.getUuid().toString()));
-
+        SellChest sellChest = new SellChest(owner, block, true);
         chests.put(block.getLocation(), sellChest);
-        main.getDataConfig().saveData(sellChest);
     }
 
     public void addChest(Location location, SellChest infiniteChest) {
@@ -119,16 +116,19 @@ public class ChestManager {
     }
 
     public void removeChest(Location location, Player player, boolean drop) {
-        SellChest chest = chests.remove(location);
-        main.getDataConfig().removeData(chest);
+        removeChest(location);
+
         if (drop) {
             if (player.getInventory().firstEmpty() == -1) {
-                location.getWorld().dropItem(location, main.getChestItem().toItemStack());
+                player.getWorld().dropItem(location, main.getChestItem().toItemStack());
             } else {
                 player.getInventory().addItem(main.getChestItem().toItemStack());
             }
-
         }
+    }
+
+    public void removeChest(Location location) {
+        chests.remove(location);
     }
 
     public Optional<SellChest> byInventory(Inventory inventory) {
@@ -152,15 +152,27 @@ public class ChestManager {
         return chests.entrySet().stream().filter(entry -> entry.getValue().getOwner().equals(owner)).collect(Collectors.toList());
     }
 
+    public List<SellChest> getPlayerChests(UUID owner) {
+        return chests.values().stream().filter(sellChest -> sellChest.getOwner().equals(owner)).collect(Collectors.toList());
+    }
+
     public void loadChests(Player player) {
         main.getChestManager().getChests(player.getUniqueId()).forEach(entry -> entry.getValue().load(player, main, entry.getKey()));
     }
 
     public void unloadChests(Player player) {
-        getChests(player.getUniqueId()).forEach(entry -> {
-            main.getDataConfig().saveData(entry.getValue());
-            entry.getValue().unload();
-        });
+        getPlayerChests(player.getUniqueId()).forEach(SellChest::unload);
     }
 
+    public void saveChests(Player player) {
+        PlayerDataFile dataFile = main.getDataCache().get(player.getUniqueId());
+
+        if (dataFile == null) dataFile = new PlayerDataFile(main, player);
+
+        dataFile.saveData(player.getUniqueId());
+    }
+
+    public boolean isSellChest(Location location) {
+        return chests.containsKey(location);
+    }
 }

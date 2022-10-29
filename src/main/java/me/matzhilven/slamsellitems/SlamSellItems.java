@@ -1,9 +1,8 @@
 package me.matzhilven.slamsellitems;
 
-import com.comphenix.protocol.ProtocolLibrary;
 import me.matzhilven.slamsellitems.chest.ChestManager;
 import me.matzhilven.slamsellitems.commands.SellItemsCommand;
-import me.matzhilven.slamsellitems.data.DataConfig;
+import me.matzhilven.slamsellitems.data.PlayerDataFile;
 import me.matzhilven.slamsellitems.listeners.InventoryListeners;
 import me.matzhilven.slamsellitems.listeners.ItemListener;
 import me.matzhilven.slamsellitems.listeners.PlayerListeners;
@@ -11,18 +10,26 @@ import me.matzhilven.slamsellitems.utils.ItemBuilder;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.configuration.InvalidConfigurationException;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.UUID;
 
 public final class SlamSellItems extends JavaPlugin {
 
     private ChestManager chestManager;
-    private DataConfig dataConfig;
 
     private ItemBuilder sellChest;
     private ItemBuilder sellWand;
 
     private Economy econ = null;
+
+    private HashMap<UUID, PlayerDataFile> dataCache;
 
     @Override
     public void onEnable() {
@@ -40,8 +47,10 @@ public final class SlamSellItems extends JavaPlugin {
         }
 
         chestManager = new ChestManager(this);
+        dataCache = new HashMap<>();
 
-        saveFiles();
+        saveDefaultConfig();
+        loadCache();
 
         new SellItemsCommand(this);
 
@@ -63,9 +72,33 @@ public final class SlamSellItems extends JavaPlugin {
                 .addNBT("sell_wand", "");
     }
 
-    private void saveFiles() {
-        saveDefaultConfig();
-        dataConfig = new DataConfig(this);
+    @Override
+    public void onDisable() {
+        Bukkit.getOnlinePlayers().forEach(player -> {
+            chestManager.unloadChests(player);
+            chestManager.saveChests(player);
+        });
+    }
+
+    private void loadCache() {
+        File dataFolder = new File(getDataFolder(), "playerdata");
+
+        if (!dataFolder.exists()) dataFolder.mkdirs();
+
+        for (File file : dataFolder.listFiles()) {
+            YamlConfiguration configuration = new YamlConfiguration();
+
+            try {
+                configuration.load(file);
+            } catch (IOException | InvalidConfigurationException e) {
+                e.printStackTrace();
+            }
+
+            PlayerDataFile dataFile = new PlayerDataFile(this, file);
+            dataFile.load();
+
+            dataCache.put(UUID.fromString(file.getName().replace(".yml", "")), dataFile);
+        }
     }
 
     private boolean setupEconomy() {
@@ -84,10 +117,6 @@ public final class SlamSellItems extends JavaPlugin {
         return chestManager;
     }
 
-    public DataConfig getDataConfig() {
-        return dataConfig;
-    }
-
     public ItemBuilder getChestItem() {
         return sellChest;
     }
@@ -99,4 +128,9 @@ public final class SlamSellItems extends JavaPlugin {
     public Economy getEcon() {
         return econ;
     }
+
+    public HashMap<UUID, PlayerDataFile> getDataCache() {
+        return dataCache;
+    }
+
 }

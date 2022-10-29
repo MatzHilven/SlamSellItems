@@ -21,19 +21,21 @@ import java.util.List;
 
 public class ItemListener extends PacketAdapter {
 
-    private final SlamSellItems main;
     private final List<String> lore;
 
     public ItemListener(Plugin plugin) {
         super(plugin, PacketType.Play.Server.WINDOW_ITEMS, PacketType.Play.Server.SET_SLOT);
-        this.main = (SlamSellItems) plugin;
-        this.lore = main.getConfig().getStringList("sell-wand-item.lore");
+
+        SlamSellItems main = (SlamSellItems) plugin;
+        lore = main.getConfig().getStringList("sell-wand-item.lore");
+
         ProtocolLibrary.getProtocolManager().addPacketListener(this);
     }
 
     @Override
     public void onPacketSending(PacketEvent event) {
         PacketContainer packet = event.getPacket();
+
         if (packet.getType() == PacketType.Play.Server.SET_SLOT) {
             WrapperPlayServerSetSlot setSlot = new WrapperPlayServerSetSlot(packet);
             if (setSlot.getSlotData() != null) {
@@ -51,12 +53,15 @@ public class ItemListener extends PacketAdapter {
                     result.add(item);
                     continue;
                 }
+
                 if (modify(item) == null) {
                     result.add(item);
                     continue;
                 }
+
                 result.add(modify(item));
             }
+
             windowItems.setSlotData(result);
         }
 

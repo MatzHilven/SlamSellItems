@@ -46,6 +46,7 @@ public class PlayerListeners implements Listener {
     @EventHandler
     private void onQuit(PlayerQuitEvent e) {
         main.getChestManager().unloadChests(e.getPlayer());
+        main.getChestManager().saveChests(e.getPlayer());
     }
 
     @EventHandler
@@ -59,7 +60,7 @@ public class PlayerListeners implements Listener {
             for (BlockFace face : BLOCK_FACES) {
                 Block loopBlock = block.getRelative(face);
                 if (loopBlock.equals(block)) continue;
-                if (loopBlock.getType() == Material.CHEST && loopBlock.hasMetadata("sell_chest")) {
+                if (loopBlock.getType() == Material.CHEST && main.getChestManager().isSellChest(loopBlock.getLocation())) {
                     e.setCancelled(true);
                     return;
                 }
@@ -84,7 +85,7 @@ public class PlayerListeners implements Listener {
     @EventHandler
     private void onBlockBreak(BlockBreakEvent e) {
         if (e.getBlock().getType() != Material.CHEST) return;
-        if (!e.getBlock().hasMetadata("sell_chest")) return;
+        if (!main.getChestManager().isSellChest(e.getBlock().getLocation())) return;
 
         e.setDropItems(false);
         main.getChestManager().removeChest(e.getBlock().getLocation(), e.getPlayer(), true);
@@ -93,7 +94,8 @@ public class PlayerListeners implements Listener {
 
     @EventHandler
     private void onPlayerInteract(PlayerInteractEvent event) {
-        if (!event.hasBlock() || !event.hasItem() || event.getClickedBlock() == null || event.getItem() == null || event.getAction() != Action.RIGHT_CLICK_BLOCK)
+        if (!event.hasBlock() || !event.hasItem() || event.getClickedBlock() == null
+                || event.getItem() == null || event.getAction() != Action.RIGHT_CLICK_BLOCK)
             return;
 
         Block block = event.getClickedBlock();
